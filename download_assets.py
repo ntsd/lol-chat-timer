@@ -23,23 +23,24 @@ staticDir = "./static/"
 
 res = requests.get('https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-summary.json')
 champions = json.loads(res.text)
-for c in champions:
-    if c["id"] > 0 and c["squarePortraitPath"]:
-        # download tile image
-        path = c["squarePortraitPath"].lower()
-        downlaodIntoPath(staticDir + path, cdragonPath(path))
+
+# for c in champions:
+#     if c["id"] > 0 and c["squarePortraitPath"]:
+#         # download tile image
+#         path = c["squarePortraitPath"].lower()
+#         downlaodIntoPath(staticDir + path, cdragonPath(path))
+
+with open(jsonDir + "champions.json", "w") as outfile:
+    outfile.write(json.dumps(champions, separators=(',', ':')))
 
 res = requests.get('https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/summoner-spells.json')
 spells = json.loads(res.text)
-for s in spells:
-    if c["id"] > 0 and c["iconPath"]:
-        # download tile image
-        path = c["iconPath"].lower()
-        downlaodIntoPath(staticDir + path, cdragonPath(path))
 
-with open(jsonDir + "champions.json", "w") as outfile:
-    outfile.write(json.dumps(champions, indent=4))
+# for s in spells:
+#     if s["id"] > 0 and s["iconPath"]:
+#         # download tile image
+#         path = s["iconPath"].lower()
+#         downlaodIntoPath(staticDir + path, cdragonPath(path))
 
 with open(jsonDir + "spells.json", "w") as outfile:
-    outfile.write(json.dumps(spells, indent=4))
-
+    outfile.write(json.dumps(spells, separators=(',', ':')))

@@ -72,7 +72,7 @@
         "focus_game_takeover": "ReleaseOnHidden",
         "focus_game_takeover_release_hotkey": "showhide",
         "block_top_window_navigation": true,
-        "resizable": false,
+        "resizable": true,
         "transparent": true,
         "keep_window_location": false
       }
