@@ -2,7 +2,7 @@
   "manifest_version": 1,
   "type": "WebApp",
   "meta": {
-    "name": "Overwolf Svelte Boilerplate",
+    "name": "LOL Chat Timer",
     "version": "0.0.1",
     "minimum-overwolf-version": "0.120.0",
     "author": "Jirawat Boonkumnerd",
@@ -10,18 +10,13 @@
     "icon_gray": "IconMouseNormal.png",
     "launcher_icon": "desktop-icon.ico",
     "window_icon": "TaskbarIcon.png",
-    "description": "Svelte Boilerplate for Overwolf"
+    "description": "League of Legends plugin to track spell and ability by in game chat"
   },
   "permissions": [
-    "GameInfo",
-    "GameControl"
+    "GameInfo"
   ],
   "data": {
-    "externally_connectable": {
-      "matches": [
-        "http://localhost:23453"
-      ]
-    },
+    "externally_connectable": {},
     "game_targeting": {
       "type": "dedicated",
       "game_ids": [

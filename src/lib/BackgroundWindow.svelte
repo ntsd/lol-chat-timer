@@ -28,7 +28,7 @@
 			launcherInfo.key === 'selected_game'
 		) {
 			if (launcherInfo.value !== 'lol') {
-				getWindow(WINDOWS_NAMES.DESKTOP).then((window) => {
+				getWindow(WINDOWS_NAMES.IN_GAME).then((window) => {
 					window.close();
 				});
 			}

@@ -2,7 +2,7 @@ export const GITHUB_LINK = 'https://github.com/ntsd/overwolf-svelte-boilerplate'
 
 // LOL event and info update features
 // @see https://overwolf.github.io/api/live-game-data/supported-games/league-of-legends
-export const REQUIRED_FEATURES = ['gep_internal', 'match_info', 'summoner_info', 'chat'];
+export const REQUIRED_FEATURES = ['match_info', 'summoner_info', 'chat'];
 
 // LOL or TFT launcher event and info features
 // @see https://overwolf.github.io/api/live-game-data/supported-launchers/league-of-legends
