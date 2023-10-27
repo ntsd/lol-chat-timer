@@ -105,6 +105,11 @@ const overwolfMock: typeof overwolf = {
 		}, //@ts-ignore
 		minimize(windowId: string, callback: (result: any) => void): void {
 			console.info('Mock minimize');
+		},
+		//@ts-ignore
+		onStateChanged: {
+			removeListener: () => {},
+			addListener: () => {},
 		}
 	},
 	//@ts-ignore
@@ -196,7 +201,26 @@ const overwolfMock: typeof overwolf = {
 			pauseEyeTracking: () => {},
 			resumeEyeTracking: () => {}
 		},
-		getRunningGameInfo: (cb: (payload: overwolf.games.GetRunningGameInfoResult) => void) => {}
+		getRunningGameInfo: (cb: (payload: overwolf.games.GetRunningGameInfoResult) => void) => {},
+		launchers: {
+			//@ts-ignore
+			events: {
+				onInfoUpdates2: MockGepMethods,
+				onNewEvents: MockGepMethods,
+				onInfoUpdates: MockGepMethods,
+				onError: MockGepMethods,
+				//@ts-ignore
+				setRequiredFeatures: (features, callback) => {
+					//@ts-ignore
+					callback({ success: true, features });
+				},
+				//@ts-ignore
+				getInfo: (callback: (payload?: any) => void) => {
+					callback();
+				}
+			},
+			getRunningLaunchersInfo: () => {}
+		}
 	}
 };
 
