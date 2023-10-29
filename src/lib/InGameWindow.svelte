@@ -5,7 +5,13 @@
 	import { createWindowDragHandler } from '../utils/createWindowDragHandler';
 	import { getWindow } from '../utils/getWindow';
 	import { gameEventAtom, setGameEventRequiredFeatures, setLogLevel } from 'overwolf-nanostores';
-	import { champions, championsMap, spells, spellsMap } from '../data/load';
+	import { championsMap, spells, spellsMap } from '../data/load';
+	import { getGameResolution } from '../utils/getGameResolution';
+	import { setWindowSize } from '../utils/setWindowSize';
+
+	getGameResolution().then((res) => {
+		setWindowSize(WINDOWS_NAMES.IN_GAME, res.width / 16, res.height / 3);
+	});
 
 	const { onDragStart, onMouseMove } = createWindowDragHandler(WINDOWS_NAMES.IN_GAME);
 	let championsTimer: ChampionsTimer = {};
@@ -35,73 +41,86 @@
 	console.log('regexStr', regexStr);
 	const chatRegex = new RegExp(regexStr, 'g');
 
-	const matches = Array.from(
-		String.raw`พิมพ์ /help เพื่อเรียกดูคำสั่งที่ใช้ได้\nสามารถหยุดเกมได้ โดยการพิมพ์ /pause เพื่อหยุดเกม และสามารถพิมพ์ /resume เพื่อเล่นต่อ\nรูน Hextech Flashtraption ของคุณถูกเปลี่ยนกลายเป็น Perfect Timing\ngame_message_Female1Worlds23Enabled\nสามารถเปิด/ปิด เสียงแจ้งเตือนได้ที่ ออปชั่น -> เสียง \n[ทีม] hotcode (Corki): fes \n[ทีม] hotcode (Corki): ff \n[ทีม] hotcode (Corki): df \nhotcode (Corki): Miss Fortune Ghost\nhotcode (Corki): Miss Fortune Heal\nhotcode (Corki): Miss Fortune Flash\nhotcode (Miss Fortune): Corki Heal\nhotcode (Miss Fortune): Corki R`.matchAll(
-			chatRegex
-		)
-	);
+	function chatRegexToTimer(chat: string) {
+		const matches = Array.from(chat.matchAll(chatRegex));
 
-	console.log('matches', matches);
-	matches.forEach((match) => {
-		if (!match.groups) return;
-		const championName = match.groups['champion'];
-		const spellName = match.groups['spell'];
-		console.log('champion', championName, 'spell', spellName);
+		console.log('matches', matches);
+		matches.forEach((match) => {
+			if (!match.groups) return;
+			const championName = match.groups['champion'];
+			const spellName = match.groups['spell'];
+			console.log('champion', championName, 'spell', spellName);
 
-		const champion = championsMap[championName];
-		if (!champion) {
-			console.error(`champion ${championName} not found`);
-			return;
-		}
-		let spell = spellsMap[spellName];
-		if (spellName === 'R') {
-			// TODO get this from champions data
-			spell = {
-				cooldown: 0,
-				description: '',
-				gameModes: [],
-				iconPath: '',
-				id: 99,
-				name: 'R',
-				summonerLevel: 1
-			};
-		}
-		if (!spell) {
-			console.error(`spell ${spellName} not found`);
-			return;
-		}
-		console.log('champion', champion, 'spell', spell);
+			const champion = championsMap[championName];
+			if (!champion) {
+				console.error(`champion ${championName} not found`);
+				return;
+			}
+			let spell = spellsMap[spellName];
+			if (spellName === 'R') {
+				// TODO get this from champions data
+				spell = {
+					cooldown: 0,
+					description: '',
+					gameModes: [],
+					iconPath: '',
+					id: 99,
+					name: 'R',
+					summonerLevel: 1
+				};
+			}
+			if (!spell) {
+				console.error(`spell ${spellName} not found`);
+				return;
+			}
+			console.log('champion', champion, 'spell', spell);
 
-		const cooldown = spell.cooldown * 1000; // spellName === 'Ghost' ? 10000 : 20000;
-		const startAt = Date.now();
-		const endAt = startAt + cooldown;
-		const countdown = cooldown;
-		const championIcon = champion.squarePortraitPath;
-		const spellIcon = spell.iconPath;
+			const cooldown = spell.cooldown * 1000; // spellName === 'Ghost' ? 10000 : 20000;
+			const startAt = Date.now();
+			const endAt = startAt + cooldown;
+			const countdown = cooldown;
+			const championIcon = champion.squarePortraitPath;
+			const spellIcon = spell.iconPath;
 
-		if (championsTimer[champion.name]) {
-			championsTimer[champion.name].spells[spell.name] = {
-				cooldown: cooldown,
-				icon: spellIcon,
-				startAt: startAt,
-				endAt: endAt,
-				countdown: countdown
-			};
-		} else {
-			championsTimer[champion.name] = {
-				icon: championIcon,
-				spells: {
-					[spell.name]: {
-						cooldown: cooldown,
-						icon: spellIcon,
-						startAt: startAt,
-						endAt: endAt,
-						countdown: countdown
+			if (championsTimer[champion.name]) {
+				championsTimer[champion.name].spells[spell.name] = {
+					cooldown: cooldown,
+					icon: spellIcon,
+					startAt: startAt,
+					endAt: endAt,
+					countdown: countdown
+				};
+			} else {
+				championsTimer[champion.name] = {
+					icon: championIcon,
+					spells: {
+						[spell.name]: {
+							cooldown: cooldown,
+							icon: spellIcon,
+							startAt: startAt,
+							endAt: endAt,
+							countdown: countdown
+						}
 					}
-				}
-			};
+				};
+			}
+		});
+	}
+
+	function removeSpell(championName: string, spellName: string) {
+		delete championsTimer[championName].spells[spellName];
+		championsTimer[championName].spells = championsTimer[championName].spells;
+
+		// remove champion if spell is 0
+		if (Object.keys(championsTimer[championName].spells).length == 0) {
+			delete championsTimer[championName];
+			championsTimer = championsTimer;
 		}
-	});
+	}
+
+	chatRegexToTimer(
+		String.raw`พิมพ์ /help เพื่อเรียกดูคำสั่งที่ใช้ได้\nสามารถหยุดเกมได้ โดยการพิมพ์ /pause เพื่อหยุดเกม และสามารถพิมพ์ /resume เพื่อเล่นต่อ\nรูน Hextech Flashtraption ของคุณถูกเปลี่ยนกลายเป็น Perfect Timing\ngame_message_Female1Worlds23Enabled\nสามารถเปิด/ปิด เสียงแจ้งเตือนได้ที่ ออปชั่น -> เสียง \n[ทีม] hotcode (Corki): fes \n[ทีม] hotcode (Corki): ff \n[ทีม] hotcode (Corki): df \nhotcode (Corki): Miss Fortune Ghost\nhotcode (Corki): Miss Fortune Heal\nhotcode (Corki): Miss Fortune Flash\nhotcode (Miss Fortune): Corki Heal\nhotcode (Miss Fortune): Corki R`
+	);
 
 	let minimize = false;
 
@@ -116,11 +135,7 @@
 		if (gameEvent && gameEvent.events) {
 			gameEvent.events.forEach((ev) => {
 				if (ev.name === 'chat') {
-					const matches = chatRegex.exec(ev.data);
-					if (matches && matches.groups) {
-						console.log('matches', matches);
-						const champion = matches.groups['champion'];
-					}
+					chatRegexToTimer(ev.data);
 				}
 			});
 		}
@@ -139,16 +154,11 @@
 			Object.keys(championsTimer[championName].spells).forEach((spellName) => {
 				const newCountdown = championsTimer[championName].spells[spellName].endAt - now;
 				if (newCountdown < 0) {
-					delete championsTimer[championName].spells[spellName];
-					championsTimer[championName].spells = championsTimer[championName].spells;
+					removeSpell(championName, spellName);
 					return;
 				}
 				championsTimer[championName].spells[spellName].countdown = newCountdown;
 			});
-			if (Object.keys(championsTimer[championName].spells).length == 0) {
-				delete championsTimer[championName];
-				championsTimer = championsTimer;
-			}
 		});
 	})();
 	onDestroy(() => {
@@ -156,10 +166,9 @@
 	});
 </script>
 
-<div class="flex flex-col h-screen max-h-screen">
+<div class="in-game flex flex-col h-screen max-h-screen">
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div class="header cursor-move bg-base-100" on:mousedown={onDragStart} on:mousemove={onMouseMove}>
-		<h3 class="header-title">LOL Chat Timer</h3>
 		<div class="window-controls-group">
 			<button
 				class="icon window-control"
@@ -202,15 +211,20 @@
 				/>
 				<div class="col-span-2 grid grid-cols-2 gap-1">
 					{#each Object.entries(championTimer.spells) as [spellName, spellTimer]}
+						<!-- svelte-ignore a11y-no-static-element-interactions -->
+						<!-- svelte-ignore a11y-click-events-have-key-events -->
 						<div
 							class="skill"
 							style={`--time-left:${
 								Math.round((spellTimer.countdown / spellTimer.cooldown) * 10000) / 100
 							}%`}
+							on:click={() => {
+								removeSpell(championName, spellName);
+							}}
 						>
 							<img class="absolute w-full h-auto" alt={spellName} src={spellTimer.icon} />
 							<div class="absolute flex w-full h-full z-20">
-								<div class="m-auto" style="font-size: 2em;">
+								<div class="m-auto" style="font-size: 1em;">
 									{Math.round(spellTimer.countdown / 1000)}
 								</div>
 							</div>

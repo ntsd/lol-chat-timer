@@ -24,8 +24,32 @@ staticDir = "./static/"
 res = requests.get('https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-summary.json')
 champions = json.loads(res.text)
 
-# for c in champions:
-#     if c["id"] > 0 and c["squarePortraitPath"]:
+
+for i, c in enumerate(champions):
+    championID = c['id']
+    if championID > 0:
+        # download champion R icon and get R cooldown
+        res = requests.get(f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champions/{championID}.json")
+        championData = json.loads(res.text)
+        championSpells = championData["spells"]
+        for s in championSpells:
+            if s["spellKey"] == "r":
+                iconPath = s["abilityIconPath"].lower()
+                downlaodIntoPath(staticDir + iconPath, cdragonPath(iconPath))
+                lowestCooldown = 999
+                for cd in s["cooldownCoefficients"]:
+                    if cd <= 0:
+                        continue
+                    if cd < lowestCooldown:
+                        lowestCooldown = cd
+
+                champions[i]["spellR"] = {
+                    "name": s["name"],
+                    "icon": iconPath,
+                    "cooldown": lowestCooldown
+                }
+
+#     if championID > 0 and c["squarePortraitPath"]:
 #         # download tile image
 #         path = c["squarePortraitPath"].lower()
 #         downlaodIntoPath(staticDir + path, cdragonPath(path))
@@ -33,8 +57,8 @@ champions = json.loads(res.text)
 with open(jsonDir + "champions.json", "w") as outfile:
     outfile.write(json.dumps(champions, separators=(',', ':')))
 
-res = requests.get('https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/summoner-spells.json')
-spells = json.loads(res.text)
+# res = requests.get('https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/summoner-spells.json')
+# spells = json.loads(res.text)
 
 # for s in spells:
 #     if s["id"] > 0 and s["iconPath"]:
@@ -42,5 +66,5 @@ spells = json.loads(res.text)
 #         path = s["iconPath"].lower()
 #         downlaodIntoPath(staticDir + path, cdragonPath(path))
 
-with open(jsonDir + "spells.json", "w") as outfile:
-    outfile.write(json.dumps(spells, separators=(',', ':')))
+# with open(jsonDir + "spells.json", "w") as outfile:
+#     outfile.write(json.dumps(spells, separators=(',', ':')))

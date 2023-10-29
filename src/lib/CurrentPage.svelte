@@ -6,10 +6,10 @@
 	import InGameWindow from './InGameWindow.svelte';
 </script>
 
-<div class="w-48">
+<!-- <div class="w-48">
 <InGameWindow />
-</div>
-<!-- {#if $currentWindowInfoAtom}
+</div> -->
+{#if $currentWindowInfoAtom}
 	{#if $currentWindowInfoAtom.name === WINDOWS_NAMES.BACKGROUND}
 		<BackgroundWindow />
 	{:else if $currentWindowInfoAtom.name === WINDOWS_NAMES.DESKTOP}
@@ -19,4 +19,4 @@
 	{:else}
 		<div>Not any page</div>
 	{/if}
-{/if} -->
+{/if}
