@@ -23,7 +23,7 @@
 <div class="flex flex-col h-screen max-h-screen">
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<header class="header cursor-move" on:mousedown={onDragStart} on:mousemove={onMouseMove}>
-		<h3 class="header-title">Desktop Window</h3>
+		<h3 class="header-title">LOL Chat Timer</h3>
 		<div class="window-controls-group">
 			<button
 				class="icon window-control"

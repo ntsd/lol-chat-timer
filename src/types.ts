@@ -14,6 +14,11 @@ export interface Champion {
 	alias: string;
 	squarePortraitPath: string;
 	roles: string[];
+	spellR: {
+		name: string;
+		icon: string;
+		cooldown: number;
+	};
 }
 
 export interface ChampionsTimer {
