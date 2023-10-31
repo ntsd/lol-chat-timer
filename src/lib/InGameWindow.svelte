@@ -4,7 +4,7 @@
 	import type { ChampionsTimer } from '../types';
 	import { createWindowDragHandler } from '../utils/createWindowDragHandler';
 	import { getWindow } from '../utils/getWindow';
-	import { gameEventAtom, setGameEventRequiredFeatures, setLogLevel } from 'overwolf-nanostores';
+	import { gameEventAtom, setGameEventRequiredFeatures } from 'overwolf-nanostores';
 	import { championsMap, spells, spellsMap } from '../data/load';
 	import { getGameResolution } from '../utils/getGameResolution';
 	import { setWindowSize } from '../utils/setWindowSize';
