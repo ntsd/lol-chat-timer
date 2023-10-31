@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { REQUIRED_FEATURES, WINDOWS_NAMES } from '../consts';
 	import type { ChampionsTimer } from '../types';
 	import { createWindowDragHandler } from '../utils/createWindowDragHandler';
@@ -9,8 +9,9 @@
 	import { getGameResolution } from '../utils/getGameResolution';
 	import { setWindowSize } from '../utils/setWindowSize';
 
-	getGameResolution().then((res) => {
-		setWindowSize(WINDOWS_NAMES.IN_GAME, res.width / 16, res.height / 3);
+	onMount(async () => {
+		const res = await getGameResolution();
+		await setWindowSize(WINDOWS_NAMES.IN_GAME, res.width / 16, res.height / 3);
 	});
 
 	const { onDragStart, onMouseMove } = createWindowDragHandler(WINDOWS_NAMES.IN_GAME);
@@ -19,8 +20,8 @@
 
 	const spellNames = spells
 		.map((s) => s.name)
-		// TODO add champions skills and items
-		// .concat(['R'])
+		// TODO add items
+		.concat(['R'])
 		// filter unused
 		.filter(
 			(s) =>
@@ -35,10 +36,10 @@
 		// Sort for maximal munch
 		.sort((a, b) => b.length - a.length)
 		.join('|');
-	console.log('spellNames', spellNames);
+	// console.log('spellNames', spellNames);
 
-	const regexStr = String.raw`\s\([a-zA-Z\s]*\)\:\s(?<champion>[a-zA-Z\s]*)\s(?<spell>${spellNames})(\\n|$)`;
-	console.log('regexStr', regexStr);
+	const regexStr = String.raw`\s\([a-zA-Z\s\']*\)\:\s(?<champion>[a-zA-Z\s\']*)\s(?<spell>${spellNames})(\\n|$)`;
+	// console.log('regexStr', regexStr);
 	const chatRegex = new RegExp(regexStr, 'g');
 
 	function chatRegexToTimer(chat: string) {
@@ -49,7 +50,7 @@
 			if (!match.groups) return;
 			const championName = match.groups['champion'];
 			const spellName = match.groups['spell'];
-			console.log('champion', championName, 'spell', spellName);
+			// console.log('champion', championName, 'spell', spellName);
 
 			const champion = championsMap[championName];
 			if (!champion) {
@@ -58,13 +59,12 @@
 			}
 			let spell = spellsMap[spellName];
 			if (spellName === 'R') {
-				// TODO get this from champions data
 				spell = {
-					cooldown: 0,
-					description: '',
+					cooldown: champion.spellR.cooldown,
+					description: champion.spellR.name,
 					gameModes: [],
-					iconPath: '',
-					id: 99,
+					iconPath: champion.spellR.icon,
+					id: -99,
 					name: 'R',
 					summonerLevel: 1
 				};
@@ -73,7 +73,7 @@
 				console.error(`spell ${spellName} not found`);
 				return;
 			}
-			console.log('champion', champion, 'spell', spell);
+			// console.log('champion', champion, 'spell', spell);
 
 			const cooldown = spell.cooldown * 1000; // spellName === 'Ghost' ? 10000 : 20000;
 			const startAt = Date.now();
@@ -118,14 +118,15 @@
 		}
 	}
 
-	chatRegexToTimer(
-		String.raw`พิมพ์ /help เพื่อเรียกดูคำสั่งที่ใช้ได้\nสามารถหยุดเกมได้ โดยการพิมพ์ /pause เพื่อหยุดเกม และสามารถพิมพ์ /resume เพื่อเล่นต่อ\nรูน Hextech Flashtraption ของคุณถูกเปลี่ยนกลายเป็น Perfect Timing\ngame_message_Female1Worlds23Enabled\nสามารถเปิด/ปิด เสียงแจ้งเตือนได้ที่ ออปชั่น -> เสียง \n[ทีม] hotcode (Corki): fes \n[ทีม] hotcode (Corki): ff \n[ทีม] hotcode (Corki): df \nhotcode (Corki): Miss Fortune Ghost\nhotcode (Corki): Miss Fortune Heal\nhotcode (Corki): Miss Fortune Flash\nhotcode (Miss Fortune): Corki Heal\nhotcode (Miss Fortune): Corki R`
-	);
+	// for testing
+	// chatRegexToTimer(
+	// 	String.raw`[ทีม] hotcode (Corki): fes \n[ทีม] hotcode (Corki): ff \n[ทีม] hotcode (Corki): df \nhotcode (Corki): Miss Fortune Ghost\nhotcode (Corki): Kog'Maw Heal\nhotcode (Corki): Kog'Maw Flash\nhotcode (Miss Fortune): Corki Heal\nhotcode (Miss Fortune): Corki R\nhotcode (Corki): Miss Fortune R`
+	// );
 
 	let minimize = false;
 
 	// remove this in production to not display debug log
-	setLogLevel('debug');
+	// setLogLevel('debug');
 
 	async function closeWindow() {
 		(await getWindow(WINDOWS_NAMES.IN_GAME)).close();
