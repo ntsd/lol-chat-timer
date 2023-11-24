@@ -11,10 +11,14 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
 		"format": "prettier --plugin-search-dir . --write .",
-		"create-opk": "cd build && zip -r ../dist-opk-v$npm_package_version.opk *",
-		"build:overwolf": "npm run build && npm run create-opk"
+		"create-opk": "ow opk pack build",
+		"sign-opk": "ow opk sign *.opk",
+		"build:overwolf": "npm run build && npm run create-opk",
+		"release": "npm run sign-opk"
 	},
 	"devDependencies": {
+		"@nanostores/persistent": "^0.9.1",
+		"@overwolf/ow-cli": "^0.0.5-1",
 		"@overwolf/types": "^3.23.9",
 		"@sveltejs/adapter-static": "^2.0.3",
 		"@sveltejs/kit": "^1.25.2",

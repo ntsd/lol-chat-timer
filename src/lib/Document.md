@@ -2,6 +2,8 @@
 
 Overwolf plugin to track summoner spell and ability by in game chat.
 
+Note: only supports english version for now.
+
 ## Features
 
 - Tracking opponent summoner spells and Ultimate spell (R) cooldown time by in game chat
@@ -23,4 +25,4 @@ Overwolf plugin to track summoner spell and ability by in game chat.
 
 ![guide6](/screenshots/guide6.png)
 
-4. You can also click to the spell icon to remove/reset the timer.
+4. You can also click on the spell icon to remove/reset the timer, right click to reduce 5 seconds, or middle click to increase 5 seconds of cooldown.

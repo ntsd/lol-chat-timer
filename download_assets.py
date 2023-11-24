@@ -17,7 +17,6 @@ def downlaodIntoPath(filePath: str, downloadPath: str):
 
 print("loading communitydragon data")
 
-setMutator = "TFTSet9_Stage2"
 jsonDir = "./src/data/"
 staticDir = "./static/"
 

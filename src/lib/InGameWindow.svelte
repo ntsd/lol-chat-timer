@@ -8,15 +8,24 @@
 	import { championsMap, spells, spellsMap } from '../data/load';
 	import { getGameResolution } from '../utils/getGameResolution';
 	import { setWindowSize } from '../utils/setWindowSize';
+	import { setWindowPosition } from '../utils/setWindowPosition';
+	import { persistentAtom } from '@nanostores/persistent';
 
 	onMount(async () => {
 		const res = await getGameResolution();
-		await setWindowSize(WINDOWS_NAMES.IN_GAME, res.width / 16, res.height / 3);
+		const width = res.width / 16;
+		const height = res.height / 3;
+		await setWindowPosition(WINDOWS_NAMES.IN_GAME, 99999, height);
+		await setWindowSize(WINDOWS_NAMES.IN_GAME, width, height);
 	});
 
 	const { onDragStart, onMouseMove } = createWindowDragHandler(WINDOWS_NAMES.IN_GAME);
 	let championsTimer: ChampionsTimer = {};
 	let frame: number;
+	let isSetting = false;
+	const encoder = { encode: JSON.stringify, decode: JSON.parse };
+	const cooldownOffsetAtom = persistentAtom<number>('cooldownOffsetAtom', 2, encoder);
+	const clickStepAtom = persistentAtom<number>('clickStepAtom', 5, encoder);
 
 	const spellNames = spells
 		.map((s) => s.name)
@@ -75,7 +84,8 @@
 			}
 			// console.log('champion', champion, 'spell', spell);
 
-			const cooldown = spell.cooldown * 1000; // spellName === 'Ghost' ? 10000 : 20000;
+			const cooldownOffset = cooldownOffsetAtom.get();
+			const cooldown = (spell.cooldown - cooldownOffset) * 1000;
 			const startAt = Date.now();
 			const endAt = startAt + cooldown;
 			const countdown = cooldown;
@@ -170,7 +180,21 @@
 <div class="in-game flex flex-col h-screen max-h-screen">
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div class="header cursor-move bg-base-100" on:mousedown={onDragStart} on:mousemove={onMouseMove}>
+		<span class="mt-1 ml-1" style="font-size: 0.5rem">Spell Timer</span>
 		<div class="window-controls-group">
+			<button
+				class="icon window-control"
+				on:click={() => {
+					isSetting = !isSetting;
+				}}
+			>
+				<svg viewBox="0 0 30 30">
+					<path
+						d="M22,16.3V13.7H19.81a4.94,4.94,0,0,0-.49-1.18L20.87,11,19,9.13l-1.55,1.55a5,5,0,0,0-1.18-.49V8H13.7v2.19a5,5,0,0,0-1.18.49L11,9.13,9.13,11l1.55,1.55a5,5,0,0,0-.49,1.18H8v2.6h2.19a5,5,0,0,0,.49,1.18L9.13,19,11,20.87l1.55-1.55a4.94,4.94,0,0,0,1.18.49V22h2.6V19.81a4.94,4.94,0,0,0,1.18-.49L19,20.87,20.87,19l-1.55-1.55a4.94,4.94,0,0,0,.49-1.18Zm-7,1.45A2.75,2.75,0,1,1,17.75,15,2.75,2.75,0,0,1,15,17.75Z"
+						fill="currentcolor"
+					/>
+				</svg>
+			</button>
 			<button
 				class="icon window-control"
 				on:click={() => {
@@ -203,37 +227,83 @@
 		</div>
 	</div>
 	<div class={`flex h-full flex-col p-1 overflow-y-hidden ${minimize && 'hidden'}`}>
-		{#each Object.entries(championsTimer) as [championName, championTimer]}
-			<div class="grid grid-cols-3 gap-1">
-				<img
-					class="col-span-1 w-full h-auto aspect-square"
-					alt={championName}
-					src={championTimer.icon}
+		{#if isSetting}
+			<div class="form-control w-full max-w-xs">
+				<!-- svelte-ignore a11y-label-has-associated-control -->
+				<label class="label">
+					<span class="label-text" style="font-size: 0.5rem">Cooldown Offset (Seconds)</span>
+				</label>
+				<input
+					type="number"
+					placeholder=""
+					class="input input-bordered input-xs w-full max-w-xs"
+					min="0"
+					value={cooldownOffsetAtom.get()}
+					on:change={(e) => {
+						const n = parseInt(e.currentTarget.value);
+						if (n >= 0) cooldownOffsetAtom.set(n);
+					}}
 				/>
-				<div class="col-span-2 grid grid-cols-2 gap-1">
-					{#each Object.entries(championTimer.spells) as [spellName, spellTimer]}
-						<!-- svelte-ignore a11y-no-static-element-interactions -->
-						<!-- svelte-ignore a11y-click-events-have-key-events -->
-						<div
-							class="skill"
-							style={`--time-left:${
-								Math.round((spellTimer.countdown / spellTimer.cooldown) * 10000) / 100
-							}%`}
-							on:click={() => {
-								removeSpell(championName, spellName);
-							}}
-						>
-							<img class="absolute w-full h-auto" alt={spellName} src={spellTimer.icon} />
-							<div class="absolute flex w-full h-full z-20">
-								<div class="m-auto" style="font-size: 1em;">
-									{Math.round(spellTimer.countdown / 1000)}
+				<!-- svelte-ignore a11y-label-has-associated-control -->
+				<label class="label">
+					<span class="label-text" style="font-size: 0.5rem">Click Step (Seconds)</span>
+				</label>
+				<input
+					type="number"
+					placeholder=""
+					class="input input-bordered input-xs w-full max-w-xs"
+					min="0"
+					value={clickStepAtom.get()}
+					on:change={(e) => {
+						const n = parseInt(e.currentTarget.value);
+						if (n >= 0) clickStepAtom.set(n);
+					}}
+				/>
+			</div>
+		{:else}
+			{#each Object.entries(championsTimer) as [championName, championTimer]}
+				<div class="grid grid-cols-3 gap-1">
+					<img
+						class="col-span-1 w-full h-auto aspect-square"
+						alt={championName}
+						src={championTimer.icon}
+					/>
+					<div class="col-span-2 grid grid-cols-2 gap-1">
+						{#each Object.entries(championTimer.spells) as [spellName, spellTimer]}
+							<!-- svelte-ignore a11y-no-static-element-interactions -->
+							<!-- svelte-ignore a11y-click-events-have-key-events -->
+							<div
+								class="skill"
+								style={`--time-left:${
+									Math.round((spellTimer.countdown / spellTimer.cooldown) * 10000) / 100
+								}%`}
+								on:mousedown={(e) => {
+									switch (e.button) {
+										case 1:
+											championsTimer[championName].spells[spellName].endAt +=
+												clickStepAtom.get() * 1000;
+											break;
+										case 2:
+											championsTimer[championName].spells[spellName].endAt -=
+												clickStepAtom.get() * 1000;
+											break;
+										default:
+											removeSpell(championName, spellName);
+									}
+								}}
+							>
+								<img class="absolute w-full h-auto" alt={spellName} src={spellTimer.icon} />
+								<div class="absolute flex w-full h-full z-20">
+									<div class="m-auto" style="font-size: 1em;">
+										{Math.round(spellTimer.countdown / 1000)}
+									</div>
 								</div>
 							</div>
-						</div>
-					{/each}
+						{/each}
+					</div>
 				</div>
-			</div>
-		{/each}
+			{/each}
+		{/if}
 	</div>
 </div>
 
